@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "id": "rag-01",
+      "category": "纯 RAG",
+      "question": "一线城市出差住宿标准是多少",
+      "expect": {
+        "route": ["rag"],
+        "citations_contain": ["《销售费用报销管理制度》第五条"]
+      }
+    },
+    {
+      "id": "rag-02",
+      "category": "纯 RAG",
+      "question": "P2 工单的首次响应时限是多久",
+      "expect": {
+        "route": ["rag"],
+        "citations_contain": ["《售后服务响应管理办法》第四条"]
+      }
+    },
+    {
+      "id": "sql-01",
+      "category": "纯 SQL",
+      "question": "第三季度各大区销售额排名如何",
+      "expect": {
+        "route": ["sql"],
+        "min_rows": 5,
+        "answer_contains": ["华东区"]
+      }
+    },
+    {
+      "id": "sql-02",
+      "category": "纯 SQL（小样本）",
+      "question": "哪个大区客单价最高",
+      "expect": {
+        "route": ["sql"],
+        "answer_contains": ["样本量"]
+      }
+    },
+    {
+      "id": "hybrid-01",
+      "category": "HYBRID（一致）",
+      "question": "华南区第三季度售后响应是否达标",
+      "expect": {
+        "route": ["hybrid"],
+        "status": ["consistent"],
+        "citations_contain": ["《售后服务响应管理办法》第四条"]
+      }
+    },
+    {
+      "id": "conflict-01",
+      "category": "冲突",
+      "question": "华东区第三季度售后响应是否达标",
+      "expect": {
+        "route": ["hybrid"],
+        "status": ["violation", "conflict"],
+        "answer_contains": ["制度要求", "实际数据", "未做取舍"]
+      }
+    },
+    {
+      "id": "conflict-02",
+      "category": "冲突",
+      "question": "销售一部一线城市住宿报销有没有超标",
+      "expect": {
+        "route": ["hybrid"],
+        "status": ["violation", "conflict"],
+        "answer_contains": ["制度要求", "实际数据", "未做取舍"]
+      }
+    },
+    {
+      "id": "ambiguous-01",
+      "category": "歧义 / 跨域",
+      "question": "差旅费用怎么控制比较好",
+      "expect": {
+        "route": ["rag", "hybrid"],
+        "answer_not_empty": true
+      }
+    }
+  ]
+}
