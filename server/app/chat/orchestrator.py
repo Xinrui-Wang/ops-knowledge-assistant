@@ -1,8 +1,8 @@
-"""统一问答编排：路由 → 检索/查询 → 生成答案。
+"""统一问答编排：路由 → 检索/查询 → 生成答案 / 对账。
 
-以「事件流」的形式产出，后续接前端时可以直接映射成 SSE：
-    route / retrieved / schema_linking / sql_generated / sql_executed /
-    answer_delta / done / error
+以「事件流」的形式产出，后续接前端时可直接映射成 SSE：
+    route / retrieved / schema_linking / metrics / sql_generated / sql_executed /
+    reconciliation / answer_delta / citations / done / error
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Iterator
 
 from app.chat.answerer import answer_with_citations, summarize_sql
+from app.chat.reconciler import compose_answer, reconcile
 from app.chat.router import route
 from app.config import settings
 from app.rag.chunker import Chunk, load_chunks
@@ -32,21 +33,32 @@ def get_retriever() -> HybridRetriever:
     return _retriever
 
 
-def _rag_events(question: str) -> Iterator[dict]:
-    hits = get_retriever().search(question, mode="hybrid", top_k=5)
-    yield {
+def retrieve(question: str, top_k: int = 5) -> list[tuple[Chunk, float]]:
+    return get_retriever().search(question, mode="hybrid", top_k=top_k)
+
+
+def sources_event(hits: list[tuple[Chunk, float]]) -> dict:
+    return {
         "type": "retrieved",
         "sources": [
             {"citation": chunk.citation, "chunk_id": chunk.chunk_id, "score": round(score, 5)}
             for chunk, score in hits
         ],
     }
-    answer, citations = answer_with_citations(question, hits)
-    yield {"type": "answer_delta", "delta": answer}
-    yield {"type": "citations", "items": citations}
 
 
-def _sql_events(question: str) -> Iterator[dict]:
+def citations_event(hits: list[tuple[Chunk, float]]) -> dict:
+    return {
+        "type": "citations",
+        "items": [
+            {"index": i, "citation": chunk.citation, "chunk_id": chunk.chunk_id}
+            for i, (chunk, _) in enumerate(hits, start=1)
+        ],
+    }
+
+
+def sql_events(question: str) -> Iterator[dict]:
+    """生成 SQL 并执行，产出过程事件；最后一项是执行结果。"""
     schema = load_schema()
     linked = link_schema(question, schema)
     linked.enum_values = collect_enum_values(linked)
@@ -59,9 +71,7 @@ def _sql_events(question: str) -> Iterator[dict]:
     yield {"type": "sql_generated", "sql": sql}
 
     columns, rows = execute(sql)
-    yield {"type": "sql_executed", "columns": columns, "rows": rows}
-
-    yield {"type": "answer_delta", "delta": summarize_sql(question, sql, columns, rows)}
+    yield {"type": "sql_executed", "sql": sql, "columns": columns, "rows": rows}
 
 
 def run(question: str) -> Iterator[dict]:
@@ -69,10 +79,44 @@ def run(question: str) -> Iterator[dict]:
         decision = route(question)
         yield {"type": "route", "route": decision.route, "reason": decision.reason}
 
+        hits: list[tuple[Chunk, float]] | None = None
+        sql_payload: dict | None = None
+
         if decision.route in ("rag", "hybrid"):
-            yield from _rag_events(question)
+            hits = retrieve(question)
+            yield sources_event(hits)
+
         if decision.route in ("sql", "hybrid"):
-            yield from _sql_events(question)
+            for event in sql_events(question):
+                if event["type"] == "sql_executed":
+                    sql_payload = event
+                yield event
+
+        if decision.route == "rag" and hits is not None:
+            answer, _ = answer_with_citations(question, hits)
+            yield {"type": "answer_delta", "delta": answer}
+            yield citations_event(hits)
+
+        elif decision.route == "sql" and sql_payload is not None:
+            summary = summarize_sql(
+                question,
+                sql_payload["sql"],
+                sql_payload["columns"],
+                sql_payload["rows"],
+            )
+            yield {"type": "answer_delta", "delta": summary}
+
+        elif decision.route == "hybrid" and hits is not None and sql_payload is not None:
+            verdict = reconcile(
+                question,
+                hits,
+                sql_payload["sql"],
+                sql_payload["columns"],
+                sql_payload["rows"],
+            )
+            yield {"type": "reconciliation", "detail": verdict}
+            yield {"type": "answer_delta", "delta": compose_answer(verdict)}
+            yield citations_event(hits)
 
         yield {"type": "done"}
     except Exception as exc:  # noqa: BLE001

@@ -40,6 +40,9 @@ def main() -> None:
             print(f"\n[sql_executed] 返回 {len(event['rows'])} 行")
             for row in event["rows"][:5]:
                 print(f"   {row}")
+        elif kind == "reconciliation":
+            detail = event["detail"]
+            print(f"\n[reconciliation] status={detail['status']}")
         elif kind == "answer_delta":
             print("\n[answer]\n" + event["delta"])
         elif kind == "citations":
