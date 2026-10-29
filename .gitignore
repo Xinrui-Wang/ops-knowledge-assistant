@@ -14,6 +14,7 @@ dist/
 
 # Runtime artifacts (seed scripts are committed, generated DBs are not)
 *.db
+data/chunks.jsonl
 *.sqlite
 *.sqlite3
 *.log
