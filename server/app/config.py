@@ -27,11 +27,14 @@ class Settings(BaseSettings):
     llm_base_url: str = ""
     llm_api_key: str = ""
     llm_model: str = ""
+    llm_timeout: float = 120.0
 
     # Embedding（OpenAI 兼容协议）
     embed_base_url: str = ""
     embed_api_key: str = ""
     embed_model: str = ""
+    embed_dimensions: int = 1024
+    embed_timeout: float = 120.0
 
     # 检索
     top_k_sparse: int = 8
