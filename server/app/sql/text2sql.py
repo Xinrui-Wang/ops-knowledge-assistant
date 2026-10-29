@@ -15,6 +15,7 @@ SQL_SYSTEM = """你是 SQLite 专家。根据用户问题写一条查询语句�
 - 只输出 SQL，不要解释，不要 markdown 围栏；
 - 只能使用下面列出的表及其列，不得使用其他表；
 - 日期列是 TEXT，格式 YYYY-MM-DD，筛选季度用 BETWEEN；
+- 按某个维度分组统计时，额外输出 COUNT(*) AS sample_count（用于判断样本量）；
 - 需要排名时用 ORDER BY，必要时加 LIMIT。
 
 示例：
