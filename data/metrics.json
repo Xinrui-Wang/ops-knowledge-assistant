@@ -1,0 +1,60 @@
+{
+  "metrics": [
+    {
+      "name": "客单价",
+      "aliases": ["客单价", "平均订单金额", "单均价"],
+      "definition": "订单总金额 ÷ 订单数（按 order_id 去重计数）。不是除以商品数量。",
+      "sql_hint": "SUM(amount) * 1.0 / COUNT(DISTINCT order_id)",
+      "tables": ["fact_sales"]
+    },
+    {
+      "name": "销售额",
+      "aliases": ["销售额", "营收", "销售收入", "卖了多少钱"],
+      "definition": "订单金额合计（含税）。",
+      "sql_hint": "SUM(amount)",
+      "tables": ["fact_sales"]
+    },
+    {
+      "name": "销量",
+      "aliases": ["销量", "台数", "件数"],
+      "definition": "商品数量合计，单位为台。",
+      "sql_hint": "SUM(quantity)",
+      "tables": ["fact_sales"]
+    },
+    {
+      "name": "首次响应时长",
+      "aliases": ["首次响应", "响应时长", "响应时间"],
+      "definition": "工单创建到首次响应的分钟数，自然时间口径。",
+      "sql_hint": "first_response_min",
+      "tables": ["fact_ticket"]
+    },
+    {
+      "name": "响应达标率",
+      "aliases": ["响应达标率", "达标率", "响应达标", "是否达标"],
+      "definition": "首次响应时长不超过制度时限的工单数 ÷ 工单总数。制度时限：P1 30 分钟、P2 2 小时（120 分钟）、P3 4 小时（240 分钟）。",
+      "sql_hint": "SUM(CASE WHEN (priority = 'P1' AND first_response_min <= 30) OR (priority = 'P2' AND first_response_min <= 120) OR (priority = 'P3' AND first_response_min <= 240) THEN 1 ELSE 0 END) * 1.0 / COUNT(*)",
+      "tables": ["fact_ticket"]
+    },
+    {
+      "name": "平均解决时长",
+      "aliases": ["解决时长", "平均解决时间"],
+      "definition": "工单解决时长的平均值，单位为小时。",
+      "sql_hint": "AVG(resolved_hours)",
+      "tables": ["fact_ticket"]
+    },
+    {
+      "name": "满意度",
+      "aliases": ["满意度", "满意分", "CSAT"],
+      "definition": "回访满意度评分均值，1—5 分。",
+      "sql_hint": "AVG(satisfaction)",
+      "tables": ["fact_ticket"]
+    },
+    {
+      "name": "住宿每晚均价",
+      "aliases": ["每晚住宿", "住宿均价", "每晚均价"],
+      "definition": "住宿类报销总金额 ÷ 住宿总晚数。注意金额是按整次出差报销的，不是每晚。",
+      "sql_hint": "SUM(amount) * 1.0 / SUM(nights)",
+      "tables": ["fact_expense"]
+    }
+  ]
+}

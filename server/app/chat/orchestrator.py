@@ -16,6 +16,7 @@ from app.rag.chunker import Chunk, load_chunks
 from app.rag.hybrid import HybridRetriever
 from app.rag.vector_store import VectorIndex
 from app.sql.db import execute
+from app.sql.metrics import match_metrics
 from app.sql.schema_linking import collect_enum_values, link_schema, load_schema
 from app.sql.text2sql import generate_sql
 
@@ -51,7 +52,10 @@ def _sql_events(question: str) -> Iterator[dict]:
     linked.enum_values = collect_enum_values(linked)
     yield {"type": "schema_linking", "detail": linked.to_dict()}
 
-    sql = generate_sql(question, linked, schema)
+    metrics = match_metrics(question)
+    yield {"type": "metrics", "items": [m["name"] for m in metrics] or ["（未匹配到登记口径）"]}
+
+    sql = generate_sql(question, linked, schema, metrics=metrics)
     yield {"type": "sql_generated", "sql": sql}
 
     columns, rows = execute(sql)

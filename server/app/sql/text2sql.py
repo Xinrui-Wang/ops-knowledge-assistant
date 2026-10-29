@@ -16,6 +16,7 @@ SQL_SYSTEM = """你是 SQLite 专家。根据用户问题写一条查询语句�
 - 只能使用下面列出的表及其列，不得使用其他表；
 - 日期列是 TEXT，格式 YYYY-MM-DD，筛选季度用 BETWEEN；
 - 按某个维度分组统计时，额外输出 COUNT(*) AS sample_count（用于判断样本量）；
+- 若给出了「口径定义」，必须严格按口径计算，不得自行更改公式；
 - 需要排名时用 ORDER BY，必要时加 LIMIT。
 
 示例：
@@ -30,7 +31,11 @@ ORDER BY sales DESC
 LIMIT 10"""
 
 
-def build_context(linked: LinkedSchema, schema: dict | None = None) -> str:
+def build_context(
+    linked: LinkedSchema,
+    schema: dict | None = None,
+    metrics: list[dict] | None = None,
+) -> str:
     schema = schema or load_schema()
     lines: list[str] = ["可用表和列（★ 为 schema linking 判定的相关列；同表其他列也可使用）："]
     for table in linked.tables:
@@ -46,6 +51,13 @@ def build_context(linked: LinkedSchema, schema: dict | None = None) -> str:
         for key, vals in linked.enum_values.items():
             lines.append(f"  {key} ∈ {vals}")
 
+    if metrics:
+        lines.append("\n口径定义（必须严格按此计算）：")
+        for metric in metrics:
+            lines.append(f"- {metric['name']}：{metric['definition']}")
+            if metric.get("sql_hint"):
+                lines.append(f"  SQL 写法参考：{metric['sql_hint']}")
+
     return "\n".join(lines)
 
 
@@ -54,8 +66,9 @@ def generate_sql(
     linked: LinkedSchema,
     schema: dict | None = None,
     llm: LLMClient | None = None,
+    metrics: list[dict] | None = None,
 ) -> str:
-    context = build_context(linked, schema)
+    context = build_context(linked, schema, metrics)
     messages = [
         {"role": "system", "content": SQL_SYSTEM},
         {"role": "user", "content": f"{context}\n\n用户问题：{question}"},

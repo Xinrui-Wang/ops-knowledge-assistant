@@ -32,6 +32,8 @@ def main() -> None:
             print(f"   理由：{detail['reason']}")
             if detail["enum_values"]:
                 print(f"   值链接：{detail['enum_values']}")
+        elif kind == "metrics":
+            print(f"\n[metrics] 命中口径：{event['items']}")
         elif kind == "sql_generated":
             print(f"\n[sql_generated]\n{event['sql']}")
         elif kind == "sql_executed":
