@@ -1,0 +1,58 @@
+{
+  "tables": {
+    "dim_region": {
+      "comment": "大区维度表，一行一个大区",
+      "columns": {
+        "region_id": "大区编码，主键",
+        "region_name": "大区名称，如「华东区」",
+        "region_group": "大区所属片区，如「东区」"
+      }
+    },
+    "dim_product": {
+      "comment": "产品维度表，一行一个产品",
+      "columns": {
+        "product_id": "产品编码，主键",
+        "product_name": "产品名称，如「机架式服务器」",
+        "product_line": "产品线：企业硬件 / 终端"
+      }
+    },
+    "fact_sales": {
+      "comment": "销售订单事实表，一行一张订单，覆盖 2026 年第三季度",
+      "columns": {
+        "order_id": "订单号，主键",
+        "order_date": "下单日期，格式 YYYY-MM-DD",
+        "region_id": "下单大区，关联 dim_region",
+        "product_id": "产品，关联 dim_product",
+        "channel": "销售渠道：直销 / 渠道 / 电商",
+        "quantity": "数量（台）",
+        "amount": "订单金额（元，含税）"
+      }
+    },
+    "fact_ticket": {
+      "comment": "售后服务工单事实表，一行一张工单；first_response_min 为首次响应时长（分钟）",
+      "columns": {
+        "ticket_id": "工单号，主键",
+        "order_id": "关联订单号，关联 fact_sales",
+        "region_id": "工单所属大区，关联 dim_region",
+        "priority": "工单等级：P1 重大故障 / P2 一般故障 / P3 咨询类",
+        "created_at": "工单创建时间",
+        "first_response_min": "首次响应时长（分钟），自然时间口径",
+        "resolved_hours": "解决时长（小时）",
+        "satisfaction": "满意度评分，1—5 分"
+      }
+    },
+    "fact_expense": {
+      "comment": "费用报销单事实表；住宿类报销的每晚报销金额 = amount / nights",
+      "columns": {
+        "expense_id": "报销单号，主键",
+        "employee_dept": "报销人所属部门",
+        "expense_type": "费用类型：住宿 / 餐饮 / 交通 / 招待",
+        "city_tier": "城市等级：一线 / 非一线（仅住宿、餐饮类有值）",
+        "amount": "报销金额（元）",
+        "nights": "住宿晚数（仅住宿类有值，其余为 NULL）",
+        "submitted_date": "提交日期",
+        "approved_date": "审批通过日期"
+      }
+    }
+  }
+}
