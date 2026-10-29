@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     db_path: Path = DATA_DIR / "ops.db"
     schema_path: Path = DATA_DIR / "schema.json"
     chunks_path: Path = DATA_DIR / "chunks.jsonl"
+    index_path: Path = DATA_DIR / "index.npz"
 
     # LLM（OpenAI 兼容协议）
     llm_base_url: str = ""

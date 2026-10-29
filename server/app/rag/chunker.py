@@ -47,6 +47,11 @@ class Chunk:
             f"（{self.clause_title}）" if self.clause_title else ""
         )
 
+    @property
+    def embed_text(self) -> str:
+        """送去打向量的文本：带上文档名，让同类制度的内容更容易聚在一起。"""
+        return f"《{self.doc_title}》\n{self.text}"
+
     def to_dict(self) -> dict:
         d = asdict(self)
         d["char_len"] = self.char_len
