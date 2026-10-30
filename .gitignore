@@ -8,8 +8,9 @@ venv/
 .ruff_cache/
 
 # Node
+# 注意：web/dist 构建产物**随仓库提交**，这样 clone 后不装 Node 也能跑；
+#      只有修改前端源码后才需要 npm install && npm run build
 node_modules/
-dist/
 *.local
 
 # Runtime artifacts

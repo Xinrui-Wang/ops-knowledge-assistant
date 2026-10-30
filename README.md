@@ -26,8 +26,9 @@ cp .env.example .env      # 填入 OKA_LLM_API_KEY / OKA_EMBED_API_KEY
 
 脚本会检查环境、建虚拟环境、装依赖、构建前端，然后启动服务。打开 http://localhost:8000 。
 
-> 样例数据库（`data/ops.db`）与向量索引（`data/index.npz`）**已随仓库提交**，
-> clone 下来无需生成，也不会额外消耗 embedding 额度。只有改动文档后才需要重建索引。
+> 样例数据库（`data/ops.db`）、向量索引（`data/index.npz`）与前端构建产物（`web/dist`）**都已随仓库提交**，
+> clone 下来无需生成、无需安装 Node，也不会额外消耗 embedding 额度。
+> 只有改动文档或前端源码时才需要重建（见下文）。
 
 **手动启动（不想用脚本时）**
 
