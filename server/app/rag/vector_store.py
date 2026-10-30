@@ -46,4 +46,15 @@ class VectorIndex:
     @classmethod
     def load(cls, path: Path) -> "VectorIndex":
         data = np.load(path, allow_pickle=False)
-        return cls(data["ids"].tolist(), data["matrix"])
+        matrix = data["matrix"]
+
+        from app.config import settings
+
+        if matrix.shape[1] != settings.embed_dimensions:
+            raise RuntimeError(
+                f"向量索引维度为 {matrix.shape[1]}，与配置 OKA_EMBED_DIMENSIONS="
+                f"{settings.embed_dimensions} 不一致。\n"
+                "更换 embedding 模型或维度后，请重跑：python -m app.rag.index"
+            )
+
+        return cls(data["ids"].tolist(), matrix)

@@ -11,59 +11,42 @@
 
 **环境要求**
 
-- Python 3.11+（开发在 WSL Ubuntu + Python 3.12）
-- Node.js 18+（前端构建）
+- Python 3.11+
+- Node.js 18+（只有构建前端时用）
 - 一个 OpenAI 兼容的 LLM + Embedding 服务（开发用硅基流动）
 
-**1. 后端依赖**
+**三步启动**
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+git clone git@github.com:Xinrui-Wang/ops-knowledge-assistant.git
+cd ops-knowledge-assistant
+cp .env.example .env      # 填入 OKA_LLM_API_KEY / OKA_EMBED_API_KEY
+./run.sh
+```
+
+脚本会检查环境、建虚拟环境、装依赖、构建前端，然后启动服务。打开 http://localhost:8000 。
+
+> 样例数据库（`data/ops.db`）与向量索引（`data/index.npz`）**已随仓库提交**，
+> clone 下来无需生成，也不会额外消耗 embedding 额度。只有改动文档后才需要重建索引。
+
+**手动启动（不想用脚本时）**
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r server/requirements.txt
+cd web && npm install && npm run build && cd ..
+cd server && uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-**2. 生成样例数据**
+**重建数据与索引**（修改了 `data/docs/` 或 `data/seed.py` 之后）
 
 ```bash
-python3 data/seed.py
+python3 data/seed.py          # 重新生成 ops.db（确定性，结果不变）
+cd server && python -m app.rag.index   # 重新向量化 47 条条款（会调用 embedding API）
 ```
 
-会生成 `data/ops.db`（5 张表）与 `data/schema.json`（数据字典）。
-脚本内置断言，埋的冲突/小样本不成立会直接报错。
-
-**3. 配置模型服务**
-
-```bash
-cp .env.example .env
-# 编辑 .env，填入 OKA_LLM_API_KEY / OKA_EMBED_API_KEY
-```
-
-任意 OpenAI 兼容服务都行，改 `OKA_LLM_BASE_URL` / `OKA_EMBED_MODEL` 等即可。
-`.env` 已被 gitignore。
-
-**4. 构建向量索引**
-
-```bash
-cd server
-python -m app.rag.index
-```
-
-47 条条款 → 1024 维向量，保存到 `data/index.npz`。文档变更后需要重跑。
-
-**5. 启动**
-
-```bash
-# 终端 A：后端
-cd server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# 终端 B：前端（二选一）
-cd web && npm install && npm run build    # 构建后由 FastAPI 直接托管
-# 或开发模式：npm run dev（5173，/api 代理到 8000）
-```
-
-打开 http://localhost:8000 。
+**关于 key**：`.env` 不入库，必须自带。任意 OpenAI 兼容服务均可，改 `OKA_LLM_BASE_URL` /
+`OKA_EMBED_MODEL` 等即可。若更换 embedding 模型或维度，请重跑索引——服务启动时会校验维度并给出提示。
 
 ---
 

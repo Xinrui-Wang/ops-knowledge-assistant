@@ -12,10 +12,11 @@ node_modules/
 dist/
 *.local
 
-# Runtime artifacts (seed scripts are committed, generated DBs are not)
+# Runtime artifacts
+# 种子库与向量索引随仓库提交：clone 后不需要生成，也不需要调用 embedding API
 *.db
+!data/ops.db
 data/chunks.jsonl
-data/index.npz
 *.sqlite
 *.sqlite3
 *.log
