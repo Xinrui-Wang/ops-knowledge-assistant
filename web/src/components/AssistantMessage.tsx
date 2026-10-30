@@ -41,9 +41,35 @@ export function AssistantMessage({ state }: { state: AssistantState }) {
         {showRag && <Step label="检索制度" done={state.sources.length > 0} />}
         {showSql && <Step label="定位表列" done={state.schemaTables.length > 0} />}
         {showSql && <Step label="生成 SQL" done={Boolean(state.sql)} />}
-        {showSql && <Step label="执行 SQL" done={state.columns.length > 0} />}
+        {showSql && (
+          <Step
+            label={state.executing ? '执行 SQL 中…' : '执行 SQL'}
+            done={state.columns.length > 0}
+          />
+        )}
         {showSql && state.metrics.length > 0 && <Step label="口径对齐" done />}
       </div>
+
+      {state.schemaTables.length > 0 && (
+        <details className="panel" open>
+          <summary>选表与选列（schema linking）</summary>
+          {state.schemaCandidates.length > 0 && (
+            <p className="reason">向量粗筛候选：{state.schemaCandidates.join('、')}</p>
+          )}
+          <p>
+            <b>选中表：</b>
+            {state.schemaTables.join('、')}
+          </p>
+          <ul className="sources">
+            {Object.entries(state.schemaColumns).map(([table, cols]) => (
+              <li key={table}>
+                <b>{table}</b>：{cols.join('、')}
+              </li>
+            ))}
+          </ul>
+          {state.schemaReason && <p className="reason">理由：{state.schemaReason}</p>}
+        </details>
+      )}
 
       {state.reconciliation && status && (
         <div className={`verdict verdict-${status}`}>

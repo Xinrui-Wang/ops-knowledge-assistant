@@ -30,6 +30,7 @@ export type ChatEvent =
     }
   | { type: 'metrics'; items: string[] }
   | { type: 'sql_generated'; sql: string }
+  | { type: 'sql_executing'; sql: string }
   | { type: 'sql_executed'; sql: string; columns: string[]; rows: Record<string, unknown>[] }
   | { type: 'reconciliation'; detail: Reconciliation }
   | { type: 'citations'; items: Citation[] }
@@ -42,7 +43,10 @@ export interface AssistantState {
   routeReason?: string
   sources: Source[]
   schemaTables: string[]
+  schemaColumns: Record<string, string[]>
+  schemaCandidates: string[]
   schemaReason?: string
+  executing: boolean
   metrics: string[]
   sql?: string
   columns: string[]
@@ -65,6 +69,9 @@ export function emptyState(): AssistantState {
   return {
     sources: [],
     schemaTables: [],
+    schemaColumns: {},
+    schemaCandidates: [],
+    executing: false,
     metrics: [],
     columns: [],
     rows: [],

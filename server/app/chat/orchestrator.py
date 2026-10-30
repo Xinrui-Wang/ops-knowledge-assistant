@@ -74,6 +74,7 @@ def sql_events(question: str) -> Iterator[dict]:
     sql = generate_sql(question, linked, schema, metrics=metrics)
     yield {"type": "sql_generated", "sql": sql}
 
+    yield {"type": "sql_executing", "sql": sql}
     columns, rows = execute(sql)
     yield {"type": "sql_executed", "sql": sql, "columns": columns, "rows": rows}
 

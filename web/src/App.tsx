@@ -14,13 +14,21 @@ function applyEvent(state: AssistantState, event: ChatEvent): AssistantState {
     case 'retrieved':
       return { ...state, sources: event.sources }
     case 'schema_linking':
-      return { ...state, schemaTables: event.detail.tables, schemaReason: event.detail.reason }
+      return {
+        ...state,
+        schemaTables: event.detail.tables,
+        schemaColumns: event.detail.columns,
+        schemaCandidates: event.detail.candidates,
+        schemaReason: event.detail.reason,
+      }
     case 'metrics':
       return { ...state, metrics: event.items }
     case 'sql_generated':
       return { ...state, sql: event.sql }
+    case 'sql_executing':
+      return { ...state, sql: event.sql, executing: true }
     case 'sql_executed':
-      return { ...state, columns: event.columns, rows: event.rows }
+      return { ...state, columns: event.columns, rows: event.rows, executing: false }
     case 'reconciliation':
       return { ...state, reconciliation: event.detail }
     case 'citations':
