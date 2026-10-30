@@ -14,6 +14,7 @@ from app.chat.reconciler import compose_answer, reconcile
 from app.chat.router import route
 from app.config import settings
 from app.rag.chunker import Chunk, load_chunks
+from app.rag.expand import expand
 from app.rag.hybrid import HybridRetriever
 from app.rag.vector_store import VectorIndex
 from app.sql.db import execute
@@ -34,7 +35,10 @@ def get_retriever() -> HybridRetriever:
 
 
 def retrieve(question: str, top_k: int = 5) -> list[tuple[Chunk, float]]:
-    return get_retriever().search(question, mode="hybrid", top_k=top_k)
+    retriever = get_retriever()
+    hits = retriever.search(question, mode="hybrid", top_k=top_k)
+    # 顺着「按《X》第Y条执行」把被引用的条款补进上下文
+    return expand(hits, retriever.chunks)
 
 
 def sources_event(hits: list[tuple[Chunk, float]]) -> dict:
