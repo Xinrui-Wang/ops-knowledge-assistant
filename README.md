@@ -51,6 +51,9 @@ cd server && python -m app.rag.index   # 重新向量化 47 条条款（会调�
 **关于 key**：`.env` 不入库，必须自带。任意 OpenAI 兼容服务均可，改 `OKA_LLM_BASE_URL` /
 `OKA_EMBED_MODEL` 等即可。若更换 embedding 模型或维度，请重跑索引——服务启动时会校验维度并给出提示。
 
+> 还没有 key？硅基流动注册即送额度，控制台创建一个 API Key 填进 `.env` 即可，约 2 分钟。
+> 本项目开发时用的组合是 `deepseek-ai/DeepSeek-V4-Flash` + `Qwen/Qwen3-Embedding-8B`（1024 维）。
+
 ---
 
 ## 架构
