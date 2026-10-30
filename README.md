@@ -12,8 +12,10 @@
 **环境要求**
 
 - Python 3.11+
-- Node.js 18+（只有构建前端时用）
+- Node.js 18+（**可选**，只有修改前端源码后重新构建时才需要）
 - 一个 OpenAI 兼容的 LLM + Embedding 服务（开发用硅基流动）
+
+> Windows 用户请在 WSL 内执行（`run.sh` 是 bash 脚本）。macOS / Linux 直接跑即可。
 
 **三步启动**
 
